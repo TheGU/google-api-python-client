@@ -138,7 +138,7 @@ Returns:
           "totalBytesProcessed": "A String", # [Output-only] [Deprecated] Use the bytes processed in the query statistics instead.
           "startTime": "A String", # [Output-only] Start time of this job, in milliseconds since the epoch. This field will be present when the job transitions from the PENDING state to either RUNNING or DONE.
           "query": { # [Output-only] Statistics for a query job.
-            "queryPlan": [ # [Output-only, Experimental] Describes execution plan for the query as a list of stages.
+            "queryPlan": [ # [Output-only, Experimental] Describes execution plan for the query.
               {
                 "computeRatioMax": 3.14, # Relative amount of time the slowest shard spent on CPU-bound tasks.
                 "recordsWritten": "A String", # Number of records written by the stage.
@@ -165,6 +165,32 @@ Returns:
             "totalBytesBilled": "A String", # [Output-only] Total bytes billed for the job.
             "totalBytesProcessed": "A String", # [Output-only] Total bytes processed for the job.
             "cacheHit": True or False, # [Output-only] Whether the query result was fetched from the query cache.
+            "undeclaredQueryParameters": [ # [Output-only, Experimental] Standard SQL only: list of undeclared query parameters detected during a dry run validation.
+              {
+                "parameterType": { # [Required] The type of this parameter.
+                  "structTypes": [ # [Optional] The types of the fields of this struct, in order, if this is a struct.
+                    {
+                      "type": # Object with schema name: QueryParameterType # [Required] The type of this field.
+                      "description": "A String", # [Optional] Human-oriented description of the field.
+                      "name": "A String", # [Optional] The name of this field.
+                    },
+                  ],
+                  "type": "A String", # [Required] The top level type of this field.
+                  "arrayType": # Object with schema name: QueryParameterType # [Optional] The type of the array's elements, if this is an array.
+                },
+                "parameterValue": { # [Required] The value of this parameter.
+                  "structValues": [ # [Optional] The struct field values, in order of the struct type's declaration.
+                    # Object with schema name: QueryParameterValue
+                  ],
+                  "arrayValues": [ # [Optional] The array values, if this is an array type.
+                    # Object with schema name: QueryParameterValue
+                  ],
+                  "value": "A String", # [Optional] The value of this value, if a simple scalar type.
+                },
+                "name": "A String", # [Optional] If unset, this is a positional parameter. Otherwise, should be unique within a query.
+              },
+            ],
+            "numDmlAffectedRows": "A String", # [Output-only, Experimental] The number of rows affected by a DML statement. Present only for DML statements INSERT, UPDATE or DELETE.
             "billingTier": 42, # [Output-only] Billing tier for the job.
             "referencedTables": [ # [Output-only, Experimental] Referenced tables for the job. Queries that reference more than 50 tables will not have a complete list.
               {
@@ -213,6 +239,9 @@ Returns:
             },
             "writeDisposition": "A String", # [Optional] Specifies the action that occurs if the destination table already exists. The following values are supported: WRITE_TRUNCATE: If the table already exists, BigQuery overwrites the table data. WRITE_APPEND: If the table already exists, BigQuery appends the data to the table. WRITE_EMPTY: If the table already exists and contains data, a 'duplicate' error is returned in the job result. The default value is WRITE_APPEND. Each action is atomic and only occurs if BigQuery is able to complete the job successfully. Creation, truncation and append actions occur as one atomic update upon job completion.
             "maxBadRecords": 42, # [Optional] The maximum number of bad records that BigQuery can ignore when running the job. If the number of bad records exceeds this value, an invalid error is returned in the job result. The default value is 0, which requires that all records are valid.
+            "schemaUpdateOptions": [ # [Experimental] Allows the schema of the desitination table to be updated as a side effect of the load job. Schema update options are supported in two cases: when writeDisposition is WRITE_APPEND; when writeDisposition is WRITE_TRUNCATE and the destination table is a partition of a table, specified by partition decorators. For normal tables, WRITE_TRUNCATE will always overwrite the schema. One or more of the following values are specified: ALLOW_FIELD_ADDITION: allow adding a nullable field to the schema. ALLOW_FIELD_RELAXATION: allow relaxing a required field in the original schema to nullable.
+              "A String",
+            ],
             "allowJaggedRows": True or False, # [Optional] Accept rows that are missing trailing optional columns. The missing values are treated as nulls. If false, records with missing trailing columns are treated as bad records, and if there are too many bad records, an invalid error is returned in the job result. The default value is false. Only applicable to CSV, ignored for other formats.
             "skipLeadingRows": 42, # [Optional] The number of rows at the top of a CSV file that BigQuery will skip when loading the data. The default value is 0. This property is useful if you have header rows in the file that should be skipped.
             "sourceUris": [ # [Required] The fully-qualified URIs that point to your data in Google Cloud Storage. Each URI can contain one '*' wildcard character and it must come after the 'bucket' name.
@@ -292,12 +321,47 @@ Returns:
               "tableId": "A String", # [Required] The ID of the table. The ID must contain only letters (a-z, A-Z), numbers (0-9), or underscores (_). The maximum length is 1,024 characters.
               "datasetId": "A String", # [Required] The ID of the dataset containing this table.
             },
+            "schemaUpdateOptions": [ # [Experimental] Allows the schema of the desitination table to be updated as a side effect of the query job. Schema update options are supported in two cases: when writeDisposition is WRITE_APPEND; when writeDisposition is WRITE_TRUNCATE and the destination table is a partition of a table, specified by partition decorators. For normal tables, WRITE_TRUNCATE will always overwrite the schema. One or more of the following values are specified: ALLOW_FIELD_ADDITION: allow adding a nullable field to the schema. ALLOW_FIELD_RELAXATION: allow relaxing a required field in the original schema to nullable.
+              "A String",
+            ],
             "priority": "A String", # [Optional] Specifies a priority for the query. Possible values include INTERACTIVE and BATCH. The default value is INTERACTIVE.
             "writeDisposition": "A String", # [Optional] Specifies the action that occurs if the destination table already exists. The following values are supported: WRITE_TRUNCATE: If the table already exists, BigQuery overwrites the table data. WRITE_APPEND: If the table already exists, BigQuery appends the data to the table. WRITE_EMPTY: If the table already exists and contains data, a 'duplicate' error is returned in the job result. The default value is WRITE_EMPTY. Each action is atomic and only occurs if BigQuery is able to complete the job successfully. Creation, truncation and append actions occur as one atomic update upon job completion.
             "allowLargeResults": True or False, # If true, allows the query to produce arbitrarily large result tables at a slight cost in performance. Requires destinationTable to be set.
+            "userDefinedFunctionResources": [ # [Experimental] Describes user-defined function resources used in the query.
+              {
+                "resourceUri": "A String", # [Pick one] A code resource to load from a Google Cloud Storage URI (gs://bucket/path).
+                "inlineCode": "A String", # [Pick one] An inline resource that contains code for a user-defined function (UDF). Providing a inline code resource is equivalent to providing a URI for a file containing the same code.
+              },
+            ],
+            "queryParameters": [ # [Experimental] Query parameters for Standard SQL queries.
+              {
+                "parameterType": { # [Required] The type of this parameter.
+                  "structTypes": [ # [Optional] The types of the fields of this struct, in order, if this is a struct.
+                    {
+                      "type": # Object with schema name: QueryParameterType # [Required] The type of this field.
+                      "description": "A String", # [Optional] Human-oriented description of the field.
+                      "name": "A String", # [Optional] The name of this field.
+                    },
+                  ],
+                  "type": "A String", # [Required] The top level type of this field.
+                  "arrayType": # Object with schema name: QueryParameterType # [Optional] The type of the array's elements, if this is an array.
+                },
+                "parameterValue": { # [Required] The value of this parameter.
+                  "structValues": [ # [Optional] The struct field values, in order of the struct type's declaration.
+                    # Object with schema name: QueryParameterValue
+                  ],
+                  "arrayValues": [ # [Optional] The array values, if this is an array type.
+                    # Object with schema name: QueryParameterValue
+                  ],
+                  "value": "A String", # [Optional] The value of this value, if a simple scalar type.
+                },
+                "name": "A String", # [Optional] If unset, this is a positional parameter. Otherwise, should be unique within a query.
+              },
+            ],
             "createDisposition": "A String", # [Optional] Specifies whether the job is allowed to create new tables. The following values are supported: CREATE_IF_NEEDED: If the table does not exist, BigQuery creates the table. CREATE_NEVER: The table must already exist. If it does not, a 'notFound' error is returned in the job result. The default value is CREATE_IF_NEEDED. Creation, truncation and append actions occur as one atomic update upon job completion.
             "query": "A String", # [Required] BigQuery SQL query to execute.
             "preserveNulls": True or False, # [Deprecated] This property is deprecated.
+            "maximumBytesBilled": "A String", # [Optional] Limits the bytes billed for this job. Queries that will have bytes billed beyond this limit will fail (without incurring a charge). If unspecified, this will be set to your project default.
             "tableDefinitions": { # [Optional] If querying an external data source outside of BigQuery, describes the data format, location and other properties of the data source. By defining these properties, the data source can then be queried as if it were a standard BigQuery table.
               "a_key": {
                 "compression": "A String", # [Optional] The compression type of the data source. Possible values include GZIP and NONE. The default value is NONE. This setting is ignored for Google Cloud Bigtable, Google Cloud Datastore backups and Avro formats.
@@ -316,11 +380,12 @@ Returns:
                   "A String",
                 ],
                 "bigtableOptions": { # [Optional] Additional options if sourceFormat is set to BIGTABLE.
+                  "readRowkeyAsString": True or False, # [Optional] If field is true, then the rowkey column families will be read and converted to string. Otherwise they are read with BYTES type values and users need to manually cast them with CAST if necessary. The default value is false.
                   "ignoreUnspecifiedColumnFamilies": True or False, # [Optional] If field is true, then the column families that are not specified in columnFamilies list are not exposed in the table schema. Otherwise, they are read with BYTES type values. The default value is false.
                   "columnFamilies": [ # [Optional] List of column families to expose in the table schema along with their types. This list restricts the column families that can be referenced in queries and specifies their value types. You can use this list to do type conversions - see the 'type' field for more details. If you leave this list empty, all column families are present in the table schema and their values are read as BYTES. During a query only the column families referenced in that query are read from Bigtable.
                     {
                       "familyId": "A String", # Identifier of the column family.
-                      "type": "A String", # [Optional] The type to convert the value in cells of this column family. The values are expected to be encoded using HBase Bytes.toBytes function when using the BINARY encoding value. Following BigQuery types are allowed (case-sensitive) - BYTES STRING INTEGER FLOAT BOOLEAN Defaut type is BYTES. This can be overridden for a specific column by listing that column in 'columns' and specifying a type for it.
+                      "type": "A String", # [Optional] The type to convert the value in cells of this column family. The values are expected to be encoded using HBase Bytes.toBytes function when using the BINARY encoding value. Following BigQuery types are allowed (case-sensitive) - BYTES STRING INTEGER FLOAT BOOLEAN Default type is BYTES. This can be overridden for a specific column by listing that column in 'columns' and specifying a type for it.
                       "onlyReadLatest": True or False, # [Optional] If this is set only the latest version of value are exposed for all columns in this column family. This can be overridden for a specific column by listing that column in 'columns' and specifying a different setting for that column.
                       "columns": [ # [Optional] Lists of columns that should be exposed as individual fields as opposed to a list of (column name, value) pairs. All columns whose qualifier matches a qualifier in this list can be accessed as .. Other columns can be accessed as a list through .Column field.
                         {
@@ -329,7 +394,7 @@ Returns:
                           "fieldName": "A String", # [Optional] If the qualifier is not a valid BigQuery field identifier i.e. does not match [a-zA-Z][a-zA-Z0-9_]*, a valid identifier must be provided as the column field name and is used as field name in queries.
                           "onlyReadLatest": True or False, # [Optional] If this is set, only the latest version of value in this column are exposed. 'onlyReadLatest' can also be set at the column family level. However, the setting at this level takes precedence if 'onlyReadLatest' is set at both levels.
                           "qualifierString": "A String",
-                          "type": "A String", # [Optional] The type to convert the value in cells of this column. The values are expected to be encoded using HBase Bytes.toBytes function when using the BINARY encoding value. Following BigQuery types are allowed (case-sensitive) - BYTES STRING INTEGER FLOAT BOOLEAN Defaut type is BYTES. 'type' can also be set at the column family level. However, the setting at this level takes precedence if 'type' is set at both levels.
+                          "type": "A String", # [Optional] The type to convert the value in cells of this column. The values are expected to be encoded using HBase Bytes.toBytes function when using the BINARY encoding value. Following BigQuery types are allowed (case-sensitive) - BYTES STRING INTEGER FLOAT BOOLEAN Default type is BYTES. 'type' can also be set at the column family level. However, the setting at this level takes precedence if 'type' is set at both levels.
                         },
                       ],
                       "encoding": "A String", # [Optional] The encoding of the values when the type is not STRING. Acceptable encoding values are: TEXT - indicates values are alphanumeric text strings. BINARY - indicates values are encoded using HBase Bytes.toBytes family of functions. This can be overridden for a specific column by listing that column in 'columns' and specifying an encoding for it.
@@ -355,12 +420,7 @@ Returns:
                 },
               },
             },
-            "userDefinedFunctionResources": [ # [Experimental] Describes user-defined function resources used in the query.
-              {
-                "resourceUri": "A String", # [Pick one] A code resource to load from a Google Cloud Storage URI (gs://bucket/path).
-                "inlineCode": "A String", # [Pick one] An inline resource that contains code for a user-defined function (UDF). Providing a inline code resource is equivalent to providing a URI for a file containing the same code.
-              },
-            ],
+            "parameterMode": "A String", # [Experimental] Standard SQL only. Whether to use positional (?) or named (@myparam) query parameters in this query.
           },
         },
         "id": "A String", # [Output-only] Opaque ID field of the job
@@ -411,7 +471,7 @@ Returns:
         "totalBytesProcessed": "A String", # [Output-only] [Deprecated] Use the bytes processed in the query statistics instead.
         "startTime": "A String", # [Output-only] Start time of this job, in milliseconds since the epoch. This field will be present when the job transitions from the PENDING state to either RUNNING or DONE.
         "query": { # [Output-only] Statistics for a query job.
-          "queryPlan": [ # [Output-only, Experimental] Describes execution plan for the query as a list of stages.
+          "queryPlan": [ # [Output-only, Experimental] Describes execution plan for the query.
             {
               "computeRatioMax": 3.14, # Relative amount of time the slowest shard spent on CPU-bound tasks.
               "recordsWritten": "A String", # Number of records written by the stage.
@@ -438,6 +498,32 @@ Returns:
           "totalBytesBilled": "A String", # [Output-only] Total bytes billed for the job.
           "totalBytesProcessed": "A String", # [Output-only] Total bytes processed for the job.
           "cacheHit": True or False, # [Output-only] Whether the query result was fetched from the query cache.
+          "undeclaredQueryParameters": [ # [Output-only, Experimental] Standard SQL only: list of undeclared query parameters detected during a dry run validation.
+            {
+              "parameterType": { # [Required] The type of this parameter.
+                "structTypes": [ # [Optional] The types of the fields of this struct, in order, if this is a struct.
+                  {
+                    "type": # Object with schema name: QueryParameterType # [Required] The type of this field.
+                    "description": "A String", # [Optional] Human-oriented description of the field.
+                    "name": "A String", # [Optional] The name of this field.
+                  },
+                ],
+                "type": "A String", # [Required] The top level type of this field.
+                "arrayType": # Object with schema name: QueryParameterType # [Optional] The type of the array's elements, if this is an array.
+              },
+              "parameterValue": { # [Required] The value of this parameter.
+                "structValues": [ # [Optional] The struct field values, in order of the struct type's declaration.
+                  # Object with schema name: QueryParameterValue
+                ],
+                "arrayValues": [ # [Optional] The array values, if this is an array type.
+                  # Object with schema name: QueryParameterValue
+                ],
+                "value": "A String", # [Optional] The value of this value, if a simple scalar type.
+              },
+              "name": "A String", # [Optional] If unset, this is a positional parameter. Otherwise, should be unique within a query.
+            },
+          ],
+          "numDmlAffectedRows": "A String", # [Output-only, Experimental] The number of rows affected by a DML statement. Present only for DML statements INSERT, UPDATE or DELETE.
           "billingTier": 42, # [Output-only] Billing tier for the job.
           "referencedTables": [ # [Output-only, Experimental] Referenced tables for the job. Queries that reference more than 50 tables will not have a complete list.
             {
@@ -486,6 +572,9 @@ Returns:
           },
           "writeDisposition": "A String", # [Optional] Specifies the action that occurs if the destination table already exists. The following values are supported: WRITE_TRUNCATE: If the table already exists, BigQuery overwrites the table data. WRITE_APPEND: If the table already exists, BigQuery appends the data to the table. WRITE_EMPTY: If the table already exists and contains data, a 'duplicate' error is returned in the job result. The default value is WRITE_APPEND. Each action is atomic and only occurs if BigQuery is able to complete the job successfully. Creation, truncation and append actions occur as one atomic update upon job completion.
           "maxBadRecords": 42, # [Optional] The maximum number of bad records that BigQuery can ignore when running the job. If the number of bad records exceeds this value, an invalid error is returned in the job result. The default value is 0, which requires that all records are valid.
+          "schemaUpdateOptions": [ # [Experimental] Allows the schema of the desitination table to be updated as a side effect of the load job. Schema update options are supported in two cases: when writeDisposition is WRITE_APPEND; when writeDisposition is WRITE_TRUNCATE and the destination table is a partition of a table, specified by partition decorators. For normal tables, WRITE_TRUNCATE will always overwrite the schema. One or more of the following values are specified: ALLOW_FIELD_ADDITION: allow adding a nullable field to the schema. ALLOW_FIELD_RELAXATION: allow relaxing a required field in the original schema to nullable.
+            "A String",
+          ],
           "allowJaggedRows": True or False, # [Optional] Accept rows that are missing trailing optional columns. The missing values are treated as nulls. If false, records with missing trailing columns are treated as bad records, and if there are too many bad records, an invalid error is returned in the job result. The default value is false. Only applicable to CSV, ignored for other formats.
           "skipLeadingRows": 42, # [Optional] The number of rows at the top of a CSV file that BigQuery will skip when loading the data. The default value is 0. This property is useful if you have header rows in the file that should be skipped.
           "sourceUris": [ # [Required] The fully-qualified URIs that point to your data in Google Cloud Storage. Each URI can contain one '*' wildcard character and it must come after the 'bucket' name.
@@ -565,12 +654,47 @@ Returns:
             "tableId": "A String", # [Required] The ID of the table. The ID must contain only letters (a-z, A-Z), numbers (0-9), or underscores (_). The maximum length is 1,024 characters.
             "datasetId": "A String", # [Required] The ID of the dataset containing this table.
           },
+          "schemaUpdateOptions": [ # [Experimental] Allows the schema of the desitination table to be updated as a side effect of the query job. Schema update options are supported in two cases: when writeDisposition is WRITE_APPEND; when writeDisposition is WRITE_TRUNCATE and the destination table is a partition of a table, specified by partition decorators. For normal tables, WRITE_TRUNCATE will always overwrite the schema. One or more of the following values are specified: ALLOW_FIELD_ADDITION: allow adding a nullable field to the schema. ALLOW_FIELD_RELAXATION: allow relaxing a required field in the original schema to nullable.
+            "A String",
+          ],
           "priority": "A String", # [Optional] Specifies a priority for the query. Possible values include INTERACTIVE and BATCH. The default value is INTERACTIVE.
           "writeDisposition": "A String", # [Optional] Specifies the action that occurs if the destination table already exists. The following values are supported: WRITE_TRUNCATE: If the table already exists, BigQuery overwrites the table data. WRITE_APPEND: If the table already exists, BigQuery appends the data to the table. WRITE_EMPTY: If the table already exists and contains data, a 'duplicate' error is returned in the job result. The default value is WRITE_EMPTY. Each action is atomic and only occurs if BigQuery is able to complete the job successfully. Creation, truncation and append actions occur as one atomic update upon job completion.
           "allowLargeResults": True or False, # If true, allows the query to produce arbitrarily large result tables at a slight cost in performance. Requires destinationTable to be set.
+          "userDefinedFunctionResources": [ # [Experimental] Describes user-defined function resources used in the query.
+            {
+              "resourceUri": "A String", # [Pick one] A code resource to load from a Google Cloud Storage URI (gs://bucket/path).
+              "inlineCode": "A String", # [Pick one] An inline resource that contains code for a user-defined function (UDF). Providing a inline code resource is equivalent to providing a URI for a file containing the same code.
+            },
+          ],
+          "queryParameters": [ # [Experimental] Query parameters for Standard SQL queries.
+            {
+              "parameterType": { # [Required] The type of this parameter.
+                "structTypes": [ # [Optional] The types of the fields of this struct, in order, if this is a struct.
+                  {
+                    "type": # Object with schema name: QueryParameterType # [Required] The type of this field.
+                    "description": "A String", # [Optional] Human-oriented description of the field.
+                    "name": "A String", # [Optional] The name of this field.
+                  },
+                ],
+                "type": "A String", # [Required] The top level type of this field.
+                "arrayType": # Object with schema name: QueryParameterType # [Optional] The type of the array's elements, if this is an array.
+              },
+              "parameterValue": { # [Required] The value of this parameter.
+                "structValues": [ # [Optional] The struct field values, in order of the struct type's declaration.
+                  # Object with schema name: QueryParameterValue
+                ],
+                "arrayValues": [ # [Optional] The array values, if this is an array type.
+                  # Object with schema name: QueryParameterValue
+                ],
+                "value": "A String", # [Optional] The value of this value, if a simple scalar type.
+              },
+              "name": "A String", # [Optional] If unset, this is a positional parameter. Otherwise, should be unique within a query.
+            },
+          ],
           "createDisposition": "A String", # [Optional] Specifies whether the job is allowed to create new tables. The following values are supported: CREATE_IF_NEEDED: If the table does not exist, BigQuery creates the table. CREATE_NEVER: The table must already exist. If it does not, a 'notFound' error is returned in the job result. The default value is CREATE_IF_NEEDED. Creation, truncation and append actions occur as one atomic update upon job completion.
           "query": "A String", # [Required] BigQuery SQL query to execute.
           "preserveNulls": True or False, # [Deprecated] This property is deprecated.
+          "maximumBytesBilled": "A String", # [Optional] Limits the bytes billed for this job. Queries that will have bytes billed beyond this limit will fail (without incurring a charge). If unspecified, this will be set to your project default.
           "tableDefinitions": { # [Optional] If querying an external data source outside of BigQuery, describes the data format, location and other properties of the data source. By defining these properties, the data source can then be queried as if it were a standard BigQuery table.
             "a_key": {
               "compression": "A String", # [Optional] The compression type of the data source. Possible values include GZIP and NONE. The default value is NONE. This setting is ignored for Google Cloud Bigtable, Google Cloud Datastore backups and Avro formats.
@@ -589,11 +713,12 @@ Returns:
                 "A String",
               ],
               "bigtableOptions": { # [Optional] Additional options if sourceFormat is set to BIGTABLE.
+                "readRowkeyAsString": True or False, # [Optional] If field is true, then the rowkey column families will be read and converted to string. Otherwise they are read with BYTES type values and users need to manually cast them with CAST if necessary. The default value is false.
                 "ignoreUnspecifiedColumnFamilies": True or False, # [Optional] If field is true, then the column families that are not specified in columnFamilies list are not exposed in the table schema. Otherwise, they are read with BYTES type values. The default value is false.
                 "columnFamilies": [ # [Optional] List of column families to expose in the table schema along with their types. This list restricts the column families that can be referenced in queries and specifies their value types. You can use this list to do type conversions - see the 'type' field for more details. If you leave this list empty, all column families are present in the table schema and their values are read as BYTES. During a query only the column families referenced in that query are read from Bigtable.
                   {
                     "familyId": "A String", # Identifier of the column family.
-                    "type": "A String", # [Optional] The type to convert the value in cells of this column family. The values are expected to be encoded using HBase Bytes.toBytes function when using the BINARY encoding value. Following BigQuery types are allowed (case-sensitive) - BYTES STRING INTEGER FLOAT BOOLEAN Defaut type is BYTES. This can be overridden for a specific column by listing that column in 'columns' and specifying a type for it.
+                    "type": "A String", # [Optional] The type to convert the value in cells of this column family. The values are expected to be encoded using HBase Bytes.toBytes function when using the BINARY encoding value. Following BigQuery types are allowed (case-sensitive) - BYTES STRING INTEGER FLOAT BOOLEAN Default type is BYTES. This can be overridden for a specific column by listing that column in 'columns' and specifying a type for it.
                     "onlyReadLatest": True or False, # [Optional] If this is set only the latest version of value are exposed for all columns in this column family. This can be overridden for a specific column by listing that column in 'columns' and specifying a different setting for that column.
                     "columns": [ # [Optional] Lists of columns that should be exposed as individual fields as opposed to a list of (column name, value) pairs. All columns whose qualifier matches a qualifier in this list can be accessed as .. Other columns can be accessed as a list through .Column field.
                       {
@@ -602,7 +727,7 @@ Returns:
                         "fieldName": "A String", # [Optional] If the qualifier is not a valid BigQuery field identifier i.e. does not match [a-zA-Z][a-zA-Z0-9_]*, a valid identifier must be provided as the column field name and is used as field name in queries.
                         "onlyReadLatest": True or False, # [Optional] If this is set, only the latest version of value in this column are exposed. 'onlyReadLatest' can also be set at the column family level. However, the setting at this level takes precedence if 'onlyReadLatest' is set at both levels.
                         "qualifierString": "A String",
-                        "type": "A String", # [Optional] The type to convert the value in cells of this column. The values are expected to be encoded using HBase Bytes.toBytes function when using the BINARY encoding value. Following BigQuery types are allowed (case-sensitive) - BYTES STRING INTEGER FLOAT BOOLEAN Defaut type is BYTES. 'type' can also be set at the column family level. However, the setting at this level takes precedence if 'type' is set at both levels.
+                        "type": "A String", # [Optional] The type to convert the value in cells of this column. The values are expected to be encoded using HBase Bytes.toBytes function when using the BINARY encoding value. Following BigQuery types are allowed (case-sensitive) - BYTES STRING INTEGER FLOAT BOOLEAN Default type is BYTES. 'type' can also be set at the column family level. However, the setting at this level takes precedence if 'type' is set at both levels.
                       },
                     ],
                     "encoding": "A String", # [Optional] The encoding of the values when the type is not STRING. Acceptable encoding values are: TEXT - indicates values are alphanumeric text strings. BINARY - indicates values are encoded using HBase Bytes.toBytes family of functions. This can be overridden for a specific column by listing that column in 'columns' and specifying an encoding for it.
@@ -628,12 +753,7 @@ Returns:
               },
             },
           },
-          "userDefinedFunctionResources": [ # [Experimental] Describes user-defined function resources used in the query.
-            {
-              "resourceUri": "A String", # [Pick one] A code resource to load from a Google Cloud Storage URI (gs://bucket/path).
-              "inlineCode": "A String", # [Pick one] An inline resource that contains code for a user-defined function (UDF). Providing a inline code resource is equivalent to providing a URI for a file containing the same code.
-            },
-          ],
+          "parameterMode": "A String", # [Experimental] Standard SQL only. Whether to use positional (?) or named (@myparam) query parameters in this query.
         },
       },
       "id": "A String", # [Output-only] Opaque ID field of the job
@@ -685,6 +805,7 @@ Returns:
         ],
       },
     ],
+    "numDmlAffectedRows": "A String", # [Output-only, Experimental] The number of rows affected by a DML statement. Present only for DML statements INSERT, UPDATE or DELETE.
     "schema": { # The schema of the results. Present only when the query completes successfully.
       "fields": [ # Describes the fields in a table.
         {
@@ -740,7 +861,7 @@ Args:
       "totalBytesProcessed": "A String", # [Output-only] [Deprecated] Use the bytes processed in the query statistics instead.
       "startTime": "A String", # [Output-only] Start time of this job, in milliseconds since the epoch. This field will be present when the job transitions from the PENDING state to either RUNNING or DONE.
       "query": { # [Output-only] Statistics for a query job.
-        "queryPlan": [ # [Output-only, Experimental] Describes execution plan for the query as a list of stages.
+        "queryPlan": [ # [Output-only, Experimental] Describes execution plan for the query.
           {
             "computeRatioMax": 3.14, # Relative amount of time the slowest shard spent on CPU-bound tasks.
             "recordsWritten": "A String", # Number of records written by the stage.
@@ -767,6 +888,32 @@ Args:
         "totalBytesBilled": "A String", # [Output-only] Total bytes billed for the job.
         "totalBytesProcessed": "A String", # [Output-only] Total bytes processed for the job.
         "cacheHit": True or False, # [Output-only] Whether the query result was fetched from the query cache.
+        "undeclaredQueryParameters": [ # [Output-only, Experimental] Standard SQL only: list of undeclared query parameters detected during a dry run validation.
+          {
+            "parameterType": { # [Required] The type of this parameter.
+              "structTypes": [ # [Optional] The types of the fields of this struct, in order, if this is a struct.
+                {
+                  "type": # Object with schema name: QueryParameterType # [Required] The type of this field.
+                  "description": "A String", # [Optional] Human-oriented description of the field.
+                  "name": "A String", # [Optional] The name of this field.
+                },
+              ],
+              "type": "A String", # [Required] The top level type of this field.
+              "arrayType": # Object with schema name: QueryParameterType # [Optional] The type of the array's elements, if this is an array.
+            },
+            "parameterValue": { # [Required] The value of this parameter.
+              "structValues": [ # [Optional] The struct field values, in order of the struct type's declaration.
+                # Object with schema name: QueryParameterValue
+              ],
+              "arrayValues": [ # [Optional] The array values, if this is an array type.
+                # Object with schema name: QueryParameterValue
+              ],
+              "value": "A String", # [Optional] The value of this value, if a simple scalar type.
+            },
+            "name": "A String", # [Optional] If unset, this is a positional parameter. Otherwise, should be unique within a query.
+          },
+        ],
+        "numDmlAffectedRows": "A String", # [Output-only, Experimental] The number of rows affected by a DML statement. Present only for DML statements INSERT, UPDATE or DELETE.
         "billingTier": 42, # [Output-only] Billing tier for the job.
         "referencedTables": [ # [Output-only, Experimental] Referenced tables for the job. Queries that reference more than 50 tables will not have a complete list.
           {
@@ -815,6 +962,9 @@ Args:
         },
         "writeDisposition": "A String", # [Optional] Specifies the action that occurs if the destination table already exists. The following values are supported: WRITE_TRUNCATE: If the table already exists, BigQuery overwrites the table data. WRITE_APPEND: If the table already exists, BigQuery appends the data to the table. WRITE_EMPTY: If the table already exists and contains data, a 'duplicate' error is returned in the job result. The default value is WRITE_APPEND. Each action is atomic and only occurs if BigQuery is able to complete the job successfully. Creation, truncation and append actions occur as one atomic update upon job completion.
         "maxBadRecords": 42, # [Optional] The maximum number of bad records that BigQuery can ignore when running the job. If the number of bad records exceeds this value, an invalid error is returned in the job result. The default value is 0, which requires that all records are valid.
+        "schemaUpdateOptions": [ # [Experimental] Allows the schema of the desitination table to be updated as a side effect of the load job. Schema update options are supported in two cases: when writeDisposition is WRITE_APPEND; when writeDisposition is WRITE_TRUNCATE and the destination table is a partition of a table, specified by partition decorators. For normal tables, WRITE_TRUNCATE will always overwrite the schema. One or more of the following values are specified: ALLOW_FIELD_ADDITION: allow adding a nullable field to the schema. ALLOW_FIELD_RELAXATION: allow relaxing a required field in the original schema to nullable.
+          "A String",
+        ],
         "allowJaggedRows": True or False, # [Optional] Accept rows that are missing trailing optional columns. The missing values are treated as nulls. If false, records with missing trailing columns are treated as bad records, and if there are too many bad records, an invalid error is returned in the job result. The default value is false. Only applicable to CSV, ignored for other formats.
         "skipLeadingRows": 42, # [Optional] The number of rows at the top of a CSV file that BigQuery will skip when loading the data. The default value is 0. This property is useful if you have header rows in the file that should be skipped.
         "sourceUris": [ # [Required] The fully-qualified URIs that point to your data in Google Cloud Storage. Each URI can contain one '*' wildcard character and it must come after the 'bucket' name.
@@ -894,12 +1044,47 @@ Args:
           "tableId": "A String", # [Required] The ID of the table. The ID must contain only letters (a-z, A-Z), numbers (0-9), or underscores (_). The maximum length is 1,024 characters.
           "datasetId": "A String", # [Required] The ID of the dataset containing this table.
         },
+        "schemaUpdateOptions": [ # [Experimental] Allows the schema of the desitination table to be updated as a side effect of the query job. Schema update options are supported in two cases: when writeDisposition is WRITE_APPEND; when writeDisposition is WRITE_TRUNCATE and the destination table is a partition of a table, specified by partition decorators. For normal tables, WRITE_TRUNCATE will always overwrite the schema. One or more of the following values are specified: ALLOW_FIELD_ADDITION: allow adding a nullable field to the schema. ALLOW_FIELD_RELAXATION: allow relaxing a required field in the original schema to nullable.
+          "A String",
+        ],
         "priority": "A String", # [Optional] Specifies a priority for the query. Possible values include INTERACTIVE and BATCH. The default value is INTERACTIVE.
         "writeDisposition": "A String", # [Optional] Specifies the action that occurs if the destination table already exists. The following values are supported: WRITE_TRUNCATE: If the table already exists, BigQuery overwrites the table data. WRITE_APPEND: If the table already exists, BigQuery appends the data to the table. WRITE_EMPTY: If the table already exists and contains data, a 'duplicate' error is returned in the job result. The default value is WRITE_EMPTY. Each action is atomic and only occurs if BigQuery is able to complete the job successfully. Creation, truncation and append actions occur as one atomic update upon job completion.
         "allowLargeResults": True or False, # If true, allows the query to produce arbitrarily large result tables at a slight cost in performance. Requires destinationTable to be set.
+        "userDefinedFunctionResources": [ # [Experimental] Describes user-defined function resources used in the query.
+          {
+            "resourceUri": "A String", # [Pick one] A code resource to load from a Google Cloud Storage URI (gs://bucket/path).
+            "inlineCode": "A String", # [Pick one] An inline resource that contains code for a user-defined function (UDF). Providing a inline code resource is equivalent to providing a URI for a file containing the same code.
+          },
+        ],
+        "queryParameters": [ # [Experimental] Query parameters for Standard SQL queries.
+          {
+            "parameterType": { # [Required] The type of this parameter.
+              "structTypes": [ # [Optional] The types of the fields of this struct, in order, if this is a struct.
+                {
+                  "type": # Object with schema name: QueryParameterType # [Required] The type of this field.
+                  "description": "A String", # [Optional] Human-oriented description of the field.
+                  "name": "A String", # [Optional] The name of this field.
+                },
+              ],
+              "type": "A String", # [Required] The top level type of this field.
+              "arrayType": # Object with schema name: QueryParameterType # [Optional] The type of the array's elements, if this is an array.
+            },
+            "parameterValue": { # [Required] The value of this parameter.
+              "structValues": [ # [Optional] The struct field values, in order of the struct type's declaration.
+                # Object with schema name: QueryParameterValue
+              ],
+              "arrayValues": [ # [Optional] The array values, if this is an array type.
+                # Object with schema name: QueryParameterValue
+              ],
+              "value": "A String", # [Optional] The value of this value, if a simple scalar type.
+            },
+            "name": "A String", # [Optional] If unset, this is a positional parameter. Otherwise, should be unique within a query.
+          },
+        ],
         "createDisposition": "A String", # [Optional] Specifies whether the job is allowed to create new tables. The following values are supported: CREATE_IF_NEEDED: If the table does not exist, BigQuery creates the table. CREATE_NEVER: The table must already exist. If it does not, a 'notFound' error is returned in the job result. The default value is CREATE_IF_NEEDED. Creation, truncation and append actions occur as one atomic update upon job completion.
         "query": "A String", # [Required] BigQuery SQL query to execute.
         "preserveNulls": True or False, # [Deprecated] This property is deprecated.
+        "maximumBytesBilled": "A String", # [Optional] Limits the bytes billed for this job. Queries that will have bytes billed beyond this limit will fail (without incurring a charge). If unspecified, this will be set to your project default.
         "tableDefinitions": { # [Optional] If querying an external data source outside of BigQuery, describes the data format, location and other properties of the data source. By defining these properties, the data source can then be queried as if it were a standard BigQuery table.
           "a_key": {
             "compression": "A String", # [Optional] The compression type of the data source. Possible values include GZIP and NONE. The default value is NONE. This setting is ignored for Google Cloud Bigtable, Google Cloud Datastore backups and Avro formats.
@@ -918,11 +1103,12 @@ Args:
               "A String",
             ],
             "bigtableOptions": { # [Optional] Additional options if sourceFormat is set to BIGTABLE.
+              "readRowkeyAsString": True or False, # [Optional] If field is true, then the rowkey column families will be read and converted to string. Otherwise they are read with BYTES type values and users need to manually cast them with CAST if necessary. The default value is false.
               "ignoreUnspecifiedColumnFamilies": True or False, # [Optional] If field is true, then the column families that are not specified in columnFamilies list are not exposed in the table schema. Otherwise, they are read with BYTES type values. The default value is false.
               "columnFamilies": [ # [Optional] List of column families to expose in the table schema along with their types. This list restricts the column families that can be referenced in queries and specifies their value types. You can use this list to do type conversions - see the 'type' field for more details. If you leave this list empty, all column families are present in the table schema and their values are read as BYTES. During a query only the column families referenced in that query are read from Bigtable.
                 {
                   "familyId": "A String", # Identifier of the column family.
-                  "type": "A String", # [Optional] The type to convert the value in cells of this column family. The values are expected to be encoded using HBase Bytes.toBytes function when using the BINARY encoding value. Following BigQuery types are allowed (case-sensitive) - BYTES STRING INTEGER FLOAT BOOLEAN Defaut type is BYTES. This can be overridden for a specific column by listing that column in 'columns' and specifying a type for it.
+                  "type": "A String", # [Optional] The type to convert the value in cells of this column family. The values are expected to be encoded using HBase Bytes.toBytes function when using the BINARY encoding value. Following BigQuery types are allowed (case-sensitive) - BYTES STRING INTEGER FLOAT BOOLEAN Default type is BYTES. This can be overridden for a specific column by listing that column in 'columns' and specifying a type for it.
                   "onlyReadLatest": True or False, # [Optional] If this is set only the latest version of value are exposed for all columns in this column family. This can be overridden for a specific column by listing that column in 'columns' and specifying a different setting for that column.
                   "columns": [ # [Optional] Lists of columns that should be exposed as individual fields as opposed to a list of (column name, value) pairs. All columns whose qualifier matches a qualifier in this list can be accessed as .. Other columns can be accessed as a list through .Column field.
                     {
@@ -931,7 +1117,7 @@ Args:
                       "fieldName": "A String", # [Optional] If the qualifier is not a valid BigQuery field identifier i.e. does not match [a-zA-Z][a-zA-Z0-9_]*, a valid identifier must be provided as the column field name and is used as field name in queries.
                       "onlyReadLatest": True or False, # [Optional] If this is set, only the latest version of value in this column are exposed. 'onlyReadLatest' can also be set at the column family level. However, the setting at this level takes precedence if 'onlyReadLatest' is set at both levels.
                       "qualifierString": "A String",
-                      "type": "A String", # [Optional] The type to convert the value in cells of this column. The values are expected to be encoded using HBase Bytes.toBytes function when using the BINARY encoding value. Following BigQuery types are allowed (case-sensitive) - BYTES STRING INTEGER FLOAT BOOLEAN Defaut type is BYTES. 'type' can also be set at the column family level. However, the setting at this level takes precedence if 'type' is set at both levels.
+                      "type": "A String", # [Optional] The type to convert the value in cells of this column. The values are expected to be encoded using HBase Bytes.toBytes function when using the BINARY encoding value. Following BigQuery types are allowed (case-sensitive) - BYTES STRING INTEGER FLOAT BOOLEAN Default type is BYTES. 'type' can also be set at the column family level. However, the setting at this level takes precedence if 'type' is set at both levels.
                     },
                   ],
                   "encoding": "A String", # [Optional] The encoding of the values when the type is not STRING. Acceptable encoding values are: TEXT - indicates values are alphanumeric text strings. BINARY - indicates values are encoded using HBase Bytes.toBytes family of functions. This can be overridden for a specific column by listing that column in 'columns' and specifying an encoding for it.
@@ -957,12 +1143,7 @@ Args:
             },
           },
         },
-        "userDefinedFunctionResources": [ # [Experimental] Describes user-defined function resources used in the query.
-          {
-            "resourceUri": "A String", # [Pick one] A code resource to load from a Google Cloud Storage URI (gs://bucket/path).
-            "inlineCode": "A String", # [Pick one] An inline resource that contains code for a user-defined function (UDF). Providing a inline code resource is equivalent to providing a URI for a file containing the same code.
-          },
-        ],
+        "parameterMode": "A String", # [Experimental] Standard SQL only. Whether to use positional (?) or named (@myparam) query parameters in this query.
       },
     },
     "id": "A String", # [Output-only] Opaque ID field of the job
@@ -1004,7 +1185,7 @@ Returns:
         "totalBytesProcessed": "A String", # [Output-only] [Deprecated] Use the bytes processed in the query statistics instead.
         "startTime": "A String", # [Output-only] Start time of this job, in milliseconds since the epoch. This field will be present when the job transitions from the PENDING state to either RUNNING or DONE.
         "query": { # [Output-only] Statistics for a query job.
-          "queryPlan": [ # [Output-only, Experimental] Describes execution plan for the query as a list of stages.
+          "queryPlan": [ # [Output-only, Experimental] Describes execution plan for the query.
             {
               "computeRatioMax": 3.14, # Relative amount of time the slowest shard spent on CPU-bound tasks.
               "recordsWritten": "A String", # Number of records written by the stage.
@@ -1031,6 +1212,32 @@ Returns:
           "totalBytesBilled": "A String", # [Output-only] Total bytes billed for the job.
           "totalBytesProcessed": "A String", # [Output-only] Total bytes processed for the job.
           "cacheHit": True or False, # [Output-only] Whether the query result was fetched from the query cache.
+          "undeclaredQueryParameters": [ # [Output-only, Experimental] Standard SQL only: list of undeclared query parameters detected during a dry run validation.
+            {
+              "parameterType": { # [Required] The type of this parameter.
+                "structTypes": [ # [Optional] The types of the fields of this struct, in order, if this is a struct.
+                  {
+                    "type": # Object with schema name: QueryParameterType # [Required] The type of this field.
+                    "description": "A String", # [Optional] Human-oriented description of the field.
+                    "name": "A String", # [Optional] The name of this field.
+                  },
+                ],
+                "type": "A String", # [Required] The top level type of this field.
+                "arrayType": # Object with schema name: QueryParameterType # [Optional] The type of the array's elements, if this is an array.
+              },
+              "parameterValue": { # [Required] The value of this parameter.
+                "structValues": [ # [Optional] The struct field values, in order of the struct type's declaration.
+                  # Object with schema name: QueryParameterValue
+                ],
+                "arrayValues": [ # [Optional] The array values, if this is an array type.
+                  # Object with schema name: QueryParameterValue
+                ],
+                "value": "A String", # [Optional] The value of this value, if a simple scalar type.
+              },
+              "name": "A String", # [Optional] If unset, this is a positional parameter. Otherwise, should be unique within a query.
+            },
+          ],
+          "numDmlAffectedRows": "A String", # [Output-only, Experimental] The number of rows affected by a DML statement. Present only for DML statements INSERT, UPDATE or DELETE.
           "billingTier": 42, # [Output-only] Billing tier for the job.
           "referencedTables": [ # [Output-only, Experimental] Referenced tables for the job. Queries that reference more than 50 tables will not have a complete list.
             {
@@ -1079,6 +1286,9 @@ Returns:
           },
           "writeDisposition": "A String", # [Optional] Specifies the action that occurs if the destination table already exists. The following values are supported: WRITE_TRUNCATE: If the table already exists, BigQuery overwrites the table data. WRITE_APPEND: If the table already exists, BigQuery appends the data to the table. WRITE_EMPTY: If the table already exists and contains data, a 'duplicate' error is returned in the job result. The default value is WRITE_APPEND. Each action is atomic and only occurs if BigQuery is able to complete the job successfully. Creation, truncation and append actions occur as one atomic update upon job completion.
           "maxBadRecords": 42, # [Optional] The maximum number of bad records that BigQuery can ignore when running the job. If the number of bad records exceeds this value, an invalid error is returned in the job result. The default value is 0, which requires that all records are valid.
+          "schemaUpdateOptions": [ # [Experimental] Allows the schema of the desitination table to be updated as a side effect of the load job. Schema update options are supported in two cases: when writeDisposition is WRITE_APPEND; when writeDisposition is WRITE_TRUNCATE and the destination table is a partition of a table, specified by partition decorators. For normal tables, WRITE_TRUNCATE will always overwrite the schema. One or more of the following values are specified: ALLOW_FIELD_ADDITION: allow adding a nullable field to the schema. ALLOW_FIELD_RELAXATION: allow relaxing a required field in the original schema to nullable.
+            "A String",
+          ],
           "allowJaggedRows": True or False, # [Optional] Accept rows that are missing trailing optional columns. The missing values are treated as nulls. If false, records with missing trailing columns are treated as bad records, and if there are too many bad records, an invalid error is returned in the job result. The default value is false. Only applicable to CSV, ignored for other formats.
           "skipLeadingRows": 42, # [Optional] The number of rows at the top of a CSV file that BigQuery will skip when loading the data. The default value is 0. This property is useful if you have header rows in the file that should be skipped.
           "sourceUris": [ # [Required] The fully-qualified URIs that point to your data in Google Cloud Storage. Each URI can contain one '*' wildcard character and it must come after the 'bucket' name.
@@ -1158,12 +1368,47 @@ Returns:
             "tableId": "A String", # [Required] The ID of the table. The ID must contain only letters (a-z, A-Z), numbers (0-9), or underscores (_). The maximum length is 1,024 characters.
             "datasetId": "A String", # [Required] The ID of the dataset containing this table.
           },
+          "schemaUpdateOptions": [ # [Experimental] Allows the schema of the desitination table to be updated as a side effect of the query job. Schema update options are supported in two cases: when writeDisposition is WRITE_APPEND; when writeDisposition is WRITE_TRUNCATE and the destination table is a partition of a table, specified by partition decorators. For normal tables, WRITE_TRUNCATE will always overwrite the schema. One or more of the following values are specified: ALLOW_FIELD_ADDITION: allow adding a nullable field to the schema. ALLOW_FIELD_RELAXATION: allow relaxing a required field in the original schema to nullable.
+            "A String",
+          ],
           "priority": "A String", # [Optional] Specifies a priority for the query. Possible values include INTERACTIVE and BATCH. The default value is INTERACTIVE.
           "writeDisposition": "A String", # [Optional] Specifies the action that occurs if the destination table already exists. The following values are supported: WRITE_TRUNCATE: If the table already exists, BigQuery overwrites the table data. WRITE_APPEND: If the table already exists, BigQuery appends the data to the table. WRITE_EMPTY: If the table already exists and contains data, a 'duplicate' error is returned in the job result. The default value is WRITE_EMPTY. Each action is atomic and only occurs if BigQuery is able to complete the job successfully. Creation, truncation and append actions occur as one atomic update upon job completion.
           "allowLargeResults": True or False, # If true, allows the query to produce arbitrarily large result tables at a slight cost in performance. Requires destinationTable to be set.
+          "userDefinedFunctionResources": [ # [Experimental] Describes user-defined function resources used in the query.
+            {
+              "resourceUri": "A String", # [Pick one] A code resource to load from a Google Cloud Storage URI (gs://bucket/path).
+              "inlineCode": "A String", # [Pick one] An inline resource that contains code for a user-defined function (UDF). Providing a inline code resource is equivalent to providing a URI for a file containing the same code.
+            },
+          ],
+          "queryParameters": [ # [Experimental] Query parameters for Standard SQL queries.
+            {
+              "parameterType": { # [Required] The type of this parameter.
+                "structTypes": [ # [Optional] The types of the fields of this struct, in order, if this is a struct.
+                  {
+                    "type": # Object with schema name: QueryParameterType # [Required] The type of this field.
+                    "description": "A String", # [Optional] Human-oriented description of the field.
+                    "name": "A String", # [Optional] The name of this field.
+                  },
+                ],
+                "type": "A String", # [Required] The top level type of this field.
+                "arrayType": # Object with schema name: QueryParameterType # [Optional] The type of the array's elements, if this is an array.
+              },
+              "parameterValue": { # [Required] The value of this parameter.
+                "structValues": [ # [Optional] The struct field values, in order of the struct type's declaration.
+                  # Object with schema name: QueryParameterValue
+                ],
+                "arrayValues": [ # [Optional] The array values, if this is an array type.
+                  # Object with schema name: QueryParameterValue
+                ],
+                "value": "A String", # [Optional] The value of this value, if a simple scalar type.
+              },
+              "name": "A String", # [Optional] If unset, this is a positional parameter. Otherwise, should be unique within a query.
+            },
+          ],
           "createDisposition": "A String", # [Optional] Specifies whether the job is allowed to create new tables. The following values are supported: CREATE_IF_NEEDED: If the table does not exist, BigQuery creates the table. CREATE_NEVER: The table must already exist. If it does not, a 'notFound' error is returned in the job result. The default value is CREATE_IF_NEEDED. Creation, truncation and append actions occur as one atomic update upon job completion.
           "query": "A String", # [Required] BigQuery SQL query to execute.
           "preserveNulls": True or False, # [Deprecated] This property is deprecated.
+          "maximumBytesBilled": "A String", # [Optional] Limits the bytes billed for this job. Queries that will have bytes billed beyond this limit will fail (without incurring a charge). If unspecified, this will be set to your project default.
           "tableDefinitions": { # [Optional] If querying an external data source outside of BigQuery, describes the data format, location and other properties of the data source. By defining these properties, the data source can then be queried as if it were a standard BigQuery table.
             "a_key": {
               "compression": "A String", # [Optional] The compression type of the data source. Possible values include GZIP and NONE. The default value is NONE. This setting is ignored for Google Cloud Bigtable, Google Cloud Datastore backups and Avro formats.
@@ -1182,11 +1427,12 @@ Returns:
                 "A String",
               ],
               "bigtableOptions": { # [Optional] Additional options if sourceFormat is set to BIGTABLE.
+                "readRowkeyAsString": True or False, # [Optional] If field is true, then the rowkey column families will be read and converted to string. Otherwise they are read with BYTES type values and users need to manually cast them with CAST if necessary. The default value is false.
                 "ignoreUnspecifiedColumnFamilies": True or False, # [Optional] If field is true, then the column families that are not specified in columnFamilies list are not exposed in the table schema. Otherwise, they are read with BYTES type values. The default value is false.
                 "columnFamilies": [ # [Optional] List of column families to expose in the table schema along with their types. This list restricts the column families that can be referenced in queries and specifies their value types. You can use this list to do type conversions - see the 'type' field for more details. If you leave this list empty, all column families are present in the table schema and their values are read as BYTES. During a query only the column families referenced in that query are read from Bigtable.
                   {
                     "familyId": "A String", # Identifier of the column family.
-                    "type": "A String", # [Optional] The type to convert the value in cells of this column family. The values are expected to be encoded using HBase Bytes.toBytes function when using the BINARY encoding value. Following BigQuery types are allowed (case-sensitive) - BYTES STRING INTEGER FLOAT BOOLEAN Defaut type is BYTES. This can be overridden for a specific column by listing that column in 'columns' and specifying a type for it.
+                    "type": "A String", # [Optional] The type to convert the value in cells of this column family. The values are expected to be encoded using HBase Bytes.toBytes function when using the BINARY encoding value. Following BigQuery types are allowed (case-sensitive) - BYTES STRING INTEGER FLOAT BOOLEAN Default type is BYTES. This can be overridden for a specific column by listing that column in 'columns' and specifying a type for it.
                     "onlyReadLatest": True or False, # [Optional] If this is set only the latest version of value are exposed for all columns in this column family. This can be overridden for a specific column by listing that column in 'columns' and specifying a different setting for that column.
                     "columns": [ # [Optional] Lists of columns that should be exposed as individual fields as opposed to a list of (column name, value) pairs. All columns whose qualifier matches a qualifier in this list can be accessed as .. Other columns can be accessed as a list through .Column field.
                       {
@@ -1195,7 +1441,7 @@ Returns:
                         "fieldName": "A String", # [Optional] If the qualifier is not a valid BigQuery field identifier i.e. does not match [a-zA-Z][a-zA-Z0-9_]*, a valid identifier must be provided as the column field name and is used as field name in queries.
                         "onlyReadLatest": True or False, # [Optional] If this is set, only the latest version of value in this column are exposed. 'onlyReadLatest' can also be set at the column family level. However, the setting at this level takes precedence if 'onlyReadLatest' is set at both levels.
                         "qualifierString": "A String",
-                        "type": "A String", # [Optional] The type to convert the value in cells of this column. The values are expected to be encoded using HBase Bytes.toBytes function when using the BINARY encoding value. Following BigQuery types are allowed (case-sensitive) - BYTES STRING INTEGER FLOAT BOOLEAN Defaut type is BYTES. 'type' can also be set at the column family level. However, the setting at this level takes precedence if 'type' is set at both levels.
+                        "type": "A String", # [Optional] The type to convert the value in cells of this column. The values are expected to be encoded using HBase Bytes.toBytes function when using the BINARY encoding value. Following BigQuery types are allowed (case-sensitive) - BYTES STRING INTEGER FLOAT BOOLEAN Default type is BYTES. 'type' can also be set at the column family level. However, the setting at this level takes precedence if 'type' is set at both levels.
                       },
                     ],
                     "encoding": "A String", # [Optional] The encoding of the values when the type is not STRING. Acceptable encoding values are: TEXT - indicates values are alphanumeric text strings. BINARY - indicates values are encoded using HBase Bytes.toBytes family of functions. This can be overridden for a specific column by listing that column in 'columns' and specifying an encoding for it.
@@ -1221,12 +1467,7 @@ Returns:
               },
             },
           },
-          "userDefinedFunctionResources": [ # [Experimental] Describes user-defined function resources used in the query.
-            {
-              "resourceUri": "A String", # [Pick one] A code resource to load from a Google Cloud Storage URI (gs://bucket/path).
-              "inlineCode": "A String", # [Pick one] An inline resource that contains code for a user-defined function (UDF). Providing a inline code resource is equivalent to providing a URI for a file containing the same code.
-            },
-          ],
+          "parameterMode": "A String", # [Experimental] Standard SQL only. Whether to use positional (?) or named (@myparam) query parameters in this query.
         },
       },
       "id": "A String", # [Output-only] Opaque ID field of the job
@@ -1291,7 +1532,7 @@ Returns:
           "totalBytesProcessed": "A String", # [Output-only] [Deprecated] Use the bytes processed in the query statistics instead.
           "startTime": "A String", # [Output-only] Start time of this job, in milliseconds since the epoch. This field will be present when the job transitions from the PENDING state to either RUNNING or DONE.
           "query": { # [Output-only] Statistics for a query job.
-            "queryPlan": [ # [Output-only, Experimental] Describes execution plan for the query as a list of stages.
+            "queryPlan": [ # [Output-only, Experimental] Describes execution plan for the query.
               {
                 "computeRatioMax": 3.14, # Relative amount of time the slowest shard spent on CPU-bound tasks.
                 "recordsWritten": "A String", # Number of records written by the stage.
@@ -1318,6 +1559,32 @@ Returns:
             "totalBytesBilled": "A String", # [Output-only] Total bytes billed for the job.
             "totalBytesProcessed": "A String", # [Output-only] Total bytes processed for the job.
             "cacheHit": True or False, # [Output-only] Whether the query result was fetched from the query cache.
+            "undeclaredQueryParameters": [ # [Output-only, Experimental] Standard SQL only: list of undeclared query parameters detected during a dry run validation.
+              {
+                "parameterType": { # [Required] The type of this parameter.
+                  "structTypes": [ # [Optional] The types of the fields of this struct, in order, if this is a struct.
+                    {
+                      "type": # Object with schema name: QueryParameterType # [Required] The type of this field.
+                      "description": "A String", # [Optional] Human-oriented description of the field.
+                      "name": "A String", # [Optional] The name of this field.
+                    },
+                  ],
+                  "type": "A String", # [Required] The top level type of this field.
+                  "arrayType": # Object with schema name: QueryParameterType # [Optional] The type of the array's elements, if this is an array.
+                },
+                "parameterValue": { # [Required] The value of this parameter.
+                  "structValues": [ # [Optional] The struct field values, in order of the struct type's declaration.
+                    # Object with schema name: QueryParameterValue
+                  ],
+                  "arrayValues": [ # [Optional] The array values, if this is an array type.
+                    # Object with schema name: QueryParameterValue
+                  ],
+                  "value": "A String", # [Optional] The value of this value, if a simple scalar type.
+                },
+                "name": "A String", # [Optional] If unset, this is a positional parameter. Otherwise, should be unique within a query.
+              },
+            ],
+            "numDmlAffectedRows": "A String", # [Output-only, Experimental] The number of rows affected by a DML statement. Present only for DML statements INSERT, UPDATE or DELETE.
             "billingTier": 42, # [Output-only] Billing tier for the job.
             "referencedTables": [ # [Output-only, Experimental] Referenced tables for the job. Queries that reference more than 50 tables will not have a complete list.
               {
@@ -1366,6 +1633,9 @@ Returns:
             },
             "writeDisposition": "A String", # [Optional] Specifies the action that occurs if the destination table already exists. The following values are supported: WRITE_TRUNCATE: If the table already exists, BigQuery overwrites the table data. WRITE_APPEND: If the table already exists, BigQuery appends the data to the table. WRITE_EMPTY: If the table already exists and contains data, a 'duplicate' error is returned in the job result. The default value is WRITE_APPEND. Each action is atomic and only occurs if BigQuery is able to complete the job successfully. Creation, truncation and append actions occur as one atomic update upon job completion.
             "maxBadRecords": 42, # [Optional] The maximum number of bad records that BigQuery can ignore when running the job. If the number of bad records exceeds this value, an invalid error is returned in the job result. The default value is 0, which requires that all records are valid.
+            "schemaUpdateOptions": [ # [Experimental] Allows the schema of the desitination table to be updated as a side effect of the load job. Schema update options are supported in two cases: when writeDisposition is WRITE_APPEND; when writeDisposition is WRITE_TRUNCATE and the destination table is a partition of a table, specified by partition decorators. For normal tables, WRITE_TRUNCATE will always overwrite the schema. One or more of the following values are specified: ALLOW_FIELD_ADDITION: allow adding a nullable field to the schema. ALLOW_FIELD_RELAXATION: allow relaxing a required field in the original schema to nullable.
+              "A String",
+            ],
             "allowJaggedRows": True or False, # [Optional] Accept rows that are missing trailing optional columns. The missing values are treated as nulls. If false, records with missing trailing columns are treated as bad records, and if there are too many bad records, an invalid error is returned in the job result. The default value is false. Only applicable to CSV, ignored for other formats.
             "skipLeadingRows": 42, # [Optional] The number of rows at the top of a CSV file that BigQuery will skip when loading the data. The default value is 0. This property is useful if you have header rows in the file that should be skipped.
             "sourceUris": [ # [Required] The fully-qualified URIs that point to your data in Google Cloud Storage. Each URI can contain one '*' wildcard character and it must come after the 'bucket' name.
@@ -1445,12 +1715,47 @@ Returns:
               "tableId": "A String", # [Required] The ID of the table. The ID must contain only letters (a-z, A-Z), numbers (0-9), or underscores (_). The maximum length is 1,024 characters.
               "datasetId": "A String", # [Required] The ID of the dataset containing this table.
             },
+            "schemaUpdateOptions": [ # [Experimental] Allows the schema of the desitination table to be updated as a side effect of the query job. Schema update options are supported in two cases: when writeDisposition is WRITE_APPEND; when writeDisposition is WRITE_TRUNCATE and the destination table is a partition of a table, specified by partition decorators. For normal tables, WRITE_TRUNCATE will always overwrite the schema. One or more of the following values are specified: ALLOW_FIELD_ADDITION: allow adding a nullable field to the schema. ALLOW_FIELD_RELAXATION: allow relaxing a required field in the original schema to nullable.
+              "A String",
+            ],
             "priority": "A String", # [Optional] Specifies a priority for the query. Possible values include INTERACTIVE and BATCH. The default value is INTERACTIVE.
             "writeDisposition": "A String", # [Optional] Specifies the action that occurs if the destination table already exists. The following values are supported: WRITE_TRUNCATE: If the table already exists, BigQuery overwrites the table data. WRITE_APPEND: If the table already exists, BigQuery appends the data to the table. WRITE_EMPTY: If the table already exists and contains data, a 'duplicate' error is returned in the job result. The default value is WRITE_EMPTY. Each action is atomic and only occurs if BigQuery is able to complete the job successfully. Creation, truncation and append actions occur as one atomic update upon job completion.
             "allowLargeResults": True or False, # If true, allows the query to produce arbitrarily large result tables at a slight cost in performance. Requires destinationTable to be set.
+            "userDefinedFunctionResources": [ # [Experimental] Describes user-defined function resources used in the query.
+              {
+                "resourceUri": "A String", # [Pick one] A code resource to load from a Google Cloud Storage URI (gs://bucket/path).
+                "inlineCode": "A String", # [Pick one] An inline resource that contains code for a user-defined function (UDF). Providing a inline code resource is equivalent to providing a URI for a file containing the same code.
+              },
+            ],
+            "queryParameters": [ # [Experimental] Query parameters for Standard SQL queries.
+              {
+                "parameterType": { # [Required] The type of this parameter.
+                  "structTypes": [ # [Optional] The types of the fields of this struct, in order, if this is a struct.
+                    {
+                      "type": # Object with schema name: QueryParameterType # [Required] The type of this field.
+                      "description": "A String", # [Optional] Human-oriented description of the field.
+                      "name": "A String", # [Optional] The name of this field.
+                    },
+                  ],
+                  "type": "A String", # [Required] The top level type of this field.
+                  "arrayType": # Object with schema name: QueryParameterType # [Optional] The type of the array's elements, if this is an array.
+                },
+                "parameterValue": { # [Required] The value of this parameter.
+                  "structValues": [ # [Optional] The struct field values, in order of the struct type's declaration.
+                    # Object with schema name: QueryParameterValue
+                  ],
+                  "arrayValues": [ # [Optional] The array values, if this is an array type.
+                    # Object with schema name: QueryParameterValue
+                  ],
+                  "value": "A String", # [Optional] The value of this value, if a simple scalar type.
+                },
+                "name": "A String", # [Optional] If unset, this is a positional parameter. Otherwise, should be unique within a query.
+              },
+            ],
             "createDisposition": "A String", # [Optional] Specifies whether the job is allowed to create new tables. The following values are supported: CREATE_IF_NEEDED: If the table does not exist, BigQuery creates the table. CREATE_NEVER: The table must already exist. If it does not, a 'notFound' error is returned in the job result. The default value is CREATE_IF_NEEDED. Creation, truncation and append actions occur as one atomic update upon job completion.
             "query": "A String", # [Required] BigQuery SQL query to execute.
             "preserveNulls": True or False, # [Deprecated] This property is deprecated.
+            "maximumBytesBilled": "A String", # [Optional] Limits the bytes billed for this job. Queries that will have bytes billed beyond this limit will fail (without incurring a charge). If unspecified, this will be set to your project default.
             "tableDefinitions": { # [Optional] If querying an external data source outside of BigQuery, describes the data format, location and other properties of the data source. By defining these properties, the data source can then be queried as if it were a standard BigQuery table.
               "a_key": {
                 "compression": "A String", # [Optional] The compression type of the data source. Possible values include GZIP and NONE. The default value is NONE. This setting is ignored for Google Cloud Bigtable, Google Cloud Datastore backups and Avro formats.
@@ -1469,11 +1774,12 @@ Returns:
                   "A String",
                 ],
                 "bigtableOptions": { # [Optional] Additional options if sourceFormat is set to BIGTABLE.
+                  "readRowkeyAsString": True or False, # [Optional] If field is true, then the rowkey column families will be read and converted to string. Otherwise they are read with BYTES type values and users need to manually cast them with CAST if necessary. The default value is false.
                   "ignoreUnspecifiedColumnFamilies": True or False, # [Optional] If field is true, then the column families that are not specified in columnFamilies list are not exposed in the table schema. Otherwise, they are read with BYTES type values. The default value is false.
                   "columnFamilies": [ # [Optional] List of column families to expose in the table schema along with their types. This list restricts the column families that can be referenced in queries and specifies their value types. You can use this list to do type conversions - see the 'type' field for more details. If you leave this list empty, all column families are present in the table schema and their values are read as BYTES. During a query only the column families referenced in that query are read from Bigtable.
                     {
                       "familyId": "A String", # Identifier of the column family.
-                      "type": "A String", # [Optional] The type to convert the value in cells of this column family. The values are expected to be encoded using HBase Bytes.toBytes function when using the BINARY encoding value. Following BigQuery types are allowed (case-sensitive) - BYTES STRING INTEGER FLOAT BOOLEAN Defaut type is BYTES. This can be overridden for a specific column by listing that column in 'columns' and specifying a type for it.
+                      "type": "A String", # [Optional] The type to convert the value in cells of this column family. The values are expected to be encoded using HBase Bytes.toBytes function when using the BINARY encoding value. Following BigQuery types are allowed (case-sensitive) - BYTES STRING INTEGER FLOAT BOOLEAN Default type is BYTES. This can be overridden for a specific column by listing that column in 'columns' and specifying a type for it.
                       "onlyReadLatest": True or False, # [Optional] If this is set only the latest version of value are exposed for all columns in this column family. This can be overridden for a specific column by listing that column in 'columns' and specifying a different setting for that column.
                       "columns": [ # [Optional] Lists of columns that should be exposed as individual fields as opposed to a list of (column name, value) pairs. All columns whose qualifier matches a qualifier in this list can be accessed as .. Other columns can be accessed as a list through .Column field.
                         {
@@ -1482,7 +1788,7 @@ Returns:
                           "fieldName": "A String", # [Optional] If the qualifier is not a valid BigQuery field identifier i.e. does not match [a-zA-Z][a-zA-Z0-9_]*, a valid identifier must be provided as the column field name and is used as field name in queries.
                           "onlyReadLatest": True or False, # [Optional] If this is set, only the latest version of value in this column are exposed. 'onlyReadLatest' can also be set at the column family level. However, the setting at this level takes precedence if 'onlyReadLatest' is set at both levels.
                           "qualifierString": "A String",
-                          "type": "A String", # [Optional] The type to convert the value in cells of this column. The values are expected to be encoded using HBase Bytes.toBytes function when using the BINARY encoding value. Following BigQuery types are allowed (case-sensitive) - BYTES STRING INTEGER FLOAT BOOLEAN Defaut type is BYTES. 'type' can also be set at the column family level. However, the setting at this level takes precedence if 'type' is set at both levels.
+                          "type": "A String", # [Optional] The type to convert the value in cells of this column. The values are expected to be encoded using HBase Bytes.toBytes function when using the BINARY encoding value. Following BigQuery types are allowed (case-sensitive) - BYTES STRING INTEGER FLOAT BOOLEAN Default type is BYTES. 'type' can also be set at the column family level. However, the setting at this level takes precedence if 'type' is set at both levels.
                         },
                       ],
                       "encoding": "A String", # [Optional] The encoding of the values when the type is not STRING. Acceptable encoding values are: TEXT - indicates values are alphanumeric text strings. BINARY - indicates values are encoded using HBase Bytes.toBytes family of functions. This can be overridden for a specific column by listing that column in 'columns' and specifying an encoding for it.
@@ -1508,12 +1814,7 @@ Returns:
                 },
               },
             },
-            "userDefinedFunctionResources": [ # [Experimental] Describes user-defined function resources used in the query.
-              {
-                "resourceUri": "A String", # [Pick one] A code resource to load from a Google Cloud Storage URI (gs://bucket/path).
-                "inlineCode": "A String", # [Pick one] An inline resource that contains code for a user-defined function (UDF). Providing a inline code resource is equivalent to providing a URI for a file containing the same code.
-              },
-            ],
+            "parameterMode": "A String", # [Experimental] Standard SQL only. Whether to use positional (?) or named (@myparam) query parameters in this query.
           },
         },
         "id": "A String", # Unique opaque ID of the job.
@@ -1555,13 +1856,39 @@ Args:
     "timeoutMs": 42, # [Optional] How long to wait for the query to complete, in milliseconds, before the request times out and returns. Note that this is only a timeout for the request, not the query. If the query takes longer to run than the timeout value, the call returns without any results and with the 'jobComplete' flag set to false. You can call GetQueryResults() to wait for the query to complete and read the results. The default value is 10000 milliseconds (10 seconds).
     "kind": "bigquery#queryRequest", # The resource type of the request.
     "dryRun": True or False, # [Optional] If set to true, BigQuery doesn't run the job. Instead, if the query is valid, BigQuery returns statistics about the job such as how many bytes would be processed. If the query is invalid, an error returns. The default value is false.
+    "parameterMode": "A String", # [Experimental] Standard SQL only. Whether to use positional (?) or named (@myparam) query parameters in this query.
     "useQueryCache": true, # [Optional] Whether to look for the result in the query cache. The query cache is a best-effort cache that will be flushed whenever tables in the query are modified. The default value is true.
     "defaultDataset": { # [Optional] Specifies the default datasetId and projectId to assume for any unqualified table names in the query. If not set, all table names in the query string must be qualified in the format 'datasetId.tableId'.
       "projectId": "A String", # [Optional] The ID of the project containing this dataset.
       "datasetId": "A String", # [Required] A unique ID for this dataset, without the project name. The ID must contain only letters (a-z, A-Z), numbers (0-9), or underscores (_). The maximum length is 1,024 characters.
     },
-    "useLegacySql": True or False, # [Experimental] Specifies whether to use BigQuery's legacy SQL dialect for this query. The default value is true. If set to false, the query will use BigQuery's standard SQL: https://cloud.google.com/bigquery/sql-reference/ When useLegacySql is set to false, the values of allowLargeResults and flattenResults are ignored; query will be run as if allowLargeResults is true and flattenResults is false.
+    "useLegacySql": true, # [Experimental] Specifies whether to use BigQuery's legacy SQL dialect for this query. The default value is true. If set to false, the query will use BigQuery's standard SQL: https://cloud.google.com/bigquery/sql-reference/ When useLegacySql is set to false, the values of allowLargeResults and flattenResults are ignored; query will be run as if allowLargeResults is true and flattenResults is false.
     "maxResults": 42, # [Optional] The maximum number of rows of data to return per page of results. Setting this flag to a small value such as 1000 and then paging through results might improve reliability when the query result set is large. In addition to this limit, responses are also limited to 10 MB. By default, there is no maximum row count, and only the byte limit applies.
+    "queryParameters": [ # [Experimental] Query parameters for Standard SQL queries.
+      {
+        "parameterType": { # [Required] The type of this parameter.
+          "structTypes": [ # [Optional] The types of the fields of this struct, in order, if this is a struct.
+            {
+              "type": # Object with schema name: QueryParameterType # [Required] The type of this field.
+              "description": "A String", # [Optional] Human-oriented description of the field.
+              "name": "A String", # [Optional] The name of this field.
+            },
+          ],
+          "type": "A String", # [Required] The top level type of this field.
+          "arrayType": # Object with schema name: QueryParameterType # [Optional] The type of the array's elements, if this is an array.
+        },
+        "parameterValue": { # [Required] The value of this parameter.
+          "structValues": [ # [Optional] The struct field values, in order of the struct type's declaration.
+            # Object with schema name: QueryParameterValue
+          ],
+          "arrayValues": [ # [Optional] The array values, if this is an array type.
+            # Object with schema name: QueryParameterValue
+          ],
+          "value": "A String", # [Optional] The value of this value, if a simple scalar type.
+        },
+        "name": "A String", # [Optional] If unset, this is a positional parameter. Otherwise, should be unique within a query.
+      },
+    ],
     "query": "A String", # [Required] A query string, following the BigQuery query syntax, of the query to execute. Example: "SELECT count(f1) FROM [myProjectId:myDatasetId.myTableId]".
     "preserveNulls": True or False, # [Deprecated] This property is deprecated.
   }
@@ -1598,6 +1925,7 @@ Returns:
         ],
       },
     ],
+    "numDmlAffectedRows": "A String", # [Output-only, Experimental] The number of rows affected by a DML statement. Present only for DML statements INSERT, UPDATE or DELETE.
     "schema": { # The schema of the results. Present only when the query completes successfully.
       "fields": [ # Describes the fields in a table.
         {
